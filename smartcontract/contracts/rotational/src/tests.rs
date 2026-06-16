@@ -222,5 +222,60 @@ fn test_premature_payout_rejection() {
     client.trigger_payout(&relayer);
 }
 
+#[test]
+fn test_fee_deduction() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(None, RotationalPool);
+    let client = RotationalPoolClient::new(&env, &contract_id);
+
+    let token_admin = Address::generate(&env);
+    let token_contract = env.register_stellar_asset_contract_v2(token_admin.clone());
+    let token_address = token_contract.address();
+    let token_client = token::StellarAssetClient::new(&env, &token_address);
+    let token_interface_client = token::Client::new(&env, &token_address);
+
+    let treasury = Address::generate(&env);
+    let relayer = Address::generate(&env);
+    let member_a = Address::generate(&env);
+    let member_b = Address::generate(&env);
+
+    let mut members = Vec::new(&env);
+    members.push_back(member_a.clone());
+    members.push_back(member_b.clone());
+
+    // Treasury fee = 20% (2000 BPS), Relayer fee = 10% (1000 BPS)
+    client.initialize(
+        &token_address,
+        &members,
+        &1000i128,
+        &100u64,
+        &2000u32,
+        &1000u32,
+        &treasury,
+    );
+
+    token_client.mint(&member_a, &1000i128);
+    token_client.mint(&member_b, &1000i128);
+
+    client.deposit(&member_a);
+    client.deposit(&member_b);
+
+    // Advance time
+    env.ledger().set_timestamp(100);
+
+    client.trigger_payout(&relayer);
+
+    // Total collected = 2000
+    // Treasury fee = 2000 * 20% = 400
+    // Relayer fee = 2000 * 10% = 200
+    // Beneficiary payout = 2000 - 400 - 200 = 1400
+    assert_eq!(token_interface_client.balance(&member_a), 1400);
+    assert_eq!(token_interface_client.balance(&treasury), 400);
+    assert_eq!(token_interface_client.balance(&relayer), 200);
+}
+
+
 
 
