@@ -133,6 +133,64 @@ export type Database = {
           tx_hash?: string | null
         }
       }
+      pool_daily_metrics: {
+        Row: {
+          id: string
+          pool_id: string
+          date: string
+          total_balance: number
+          total_deposits: number
+          total_withdrawals: number
+          active_members_count: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          pool_id: string
+          date?: string
+          total_balance?: number
+          total_deposits?: number
+          total_withdrawals?: number
+          active_members_count?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          pool_id?: string
+          date?: string
+          total_balance?: number
+          total_deposits?: number
+          total_withdrawals?: number
+          active_members_count?: number
+          created_at?: string
+        }
+      }
+      pool_health_scores: {
+        Row: {
+          id: string
+          pool_id: string
+          health_score: number
+          participation_rate: number
+          risk_indicator: string
+          last_calculated_at: string
+        }
+        Insert: {
+          id?: string
+          pool_id: string
+          health_score?: number
+          participation_rate?: number
+          risk_indicator?: string
+          last_calculated_at?: string
+        }
+        Update: {
+          id?: string
+          pool_id?: string
+          health_score?: number
+          participation_rate?: number
+          risk_indicator?: string
+          last_calculated_at?: string
+        }
+      }
     }
   }
 }

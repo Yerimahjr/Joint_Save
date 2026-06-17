@@ -75,15 +75,11 @@ export function Header() {
 
           <div className="flex items-center gap-4">
             <ThemeToggle />
-            {isConnected ? (
-              <>
-                <Button variant="ghost" asChild className="hidden sm:flex">
-                  <Link href="/dashboard">Dashboard</Link>
-                </Button>
-                <Button onClick={disconnect} variant="outline">
-                  {address?.slice(0, 6)}...{address?.slice(-4)}
-                </Button>
-              </>
+            {address && (
+              <Button variant="ghost" asChild className="hidden sm:flex">
+                <Link href="/dashboard">Dashboard</Link>
+              </Button>
+            )}
             {address ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
