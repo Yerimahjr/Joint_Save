@@ -546,6 +546,7 @@ export interface RotationalPoolState {
   members: string[]
   nextPayoutTime: number   // unix timestamp (seconds)
   hasDeposited: boolean    // for the querying user
+  depositCount: number     // number of members who deposited in the current round
 }
 
 export interface TargetPoolState {
@@ -639,12 +640,34 @@ export async function fetchRotationalState(
     } catch {}
   }
 
+  let depositCount = 0
+  if (activeVal.switch().name === "scvBool" && activeVal.b() && members.length > 0) {
+    try {
+      const depositChecks: boolean[] = []
+      const batchSize = 3
+      for (let i = 0; i < members.length; i += batchSize) {
+        const batch = members.slice(i, i + batchSize)
+        const results = await Promise.all(
+          batch.map(async (m) => {
+            const depVal = await viewCall(contractId, "has_deposited", addressVal(m))
+            return depVal.switch().name === "scvBool" ? depVal.b() : false
+          })
+        )
+        depositChecks.push(...results)
+      }
+      depositCount = depositChecks.filter(Boolean).length
+    } catch (e) {
+      console.error("Failed to query deposit checks for members:", e)
+    }
+  }
+
   return {
     isActive: activeVal.switch().name === "scvBool" ? activeVal.b() : false,
     currentRound: roundVal.switch().name === "scvU32" ? roundVal.u32() : 0,
     members,
     nextPayoutTime: Number(scValToBigInt(payoutVal)),
     hasDeposited,
+    depositCount,
   }
 }
 
