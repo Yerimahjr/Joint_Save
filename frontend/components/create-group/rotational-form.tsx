@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, X, Loader2, AlertCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useStellar } from "@/components/web3-provider"
-import { useDeployPool, useInitializePool, useRegisterPool } from "@/hooks/useJointSaveContracts"
+import { useDeployPool, useInitializePool, useRegisterPool, useSetReputationTracker } from "@/hooks/useJointSaveContracts"
 import { FieldTooltip } from "@/components/ui/field-tooltip"
 import { FieldError } from "@/components/ui/form"
 import { FormProgress, type ProgressField } from "@/components/ui/form-progress"
@@ -62,6 +62,7 @@ export function RotationalForm() {
   const { deploy } = useDeployPool()
   const { initRotational } = useInitializePool()
   const { register } = useRegisterPool("rotational")
+  const { setTracker } = useSetReputationTracker()
 
   // Always include creator as first member
   const allMembers = address ? [address, ...members] : members
@@ -143,6 +144,13 @@ export function RotationalForm() {
         await register(address, contractId)
       } catch (regErr: any) {
         console.warn("Factory registration skipped:", regErr.message)
+      }
+
+      // 3b. Wire up the reputation tracker (best-effort — feature is additive)
+      try {
+        await setTracker(contractId)
+      } catch (repErr: any) {
+        console.warn("Reputation tracker wiring skipped:", repErr.message)
       }
 
       // 4. Save metadata to DB

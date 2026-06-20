@@ -2,16 +2,19 @@
 
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
   CheckCircle2,
   Clock,
   XCircle,
   Loader2,
   AlertCircle,
+  Award,
 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { usePoolData } from "@/lib/data-layer/PoolDataProvider";
 import { useOptimisticTransactions } from "@/hooks/useOptimisticTransactions";
-import { RotationalPoolState } from "@/hooks/useJointSaveContracts";
+import { RotationalPoolState, fetchReputation, type ReputationScore } from "@/hooks/useJointSaveContracts";
 
 interface Member {
   id: string;
@@ -23,7 +26,6 @@ interface Member {
 
 interface GroupMembersProps {
   groupId: string;
-  /** Contract address when known — used as the cache key for deployed pools */
   contractAddress?: string;
   poolType?: "rotational" | "target" | "flexible";
 }
@@ -43,9 +45,27 @@ export function GroupMembers({
   const { data, isLoading } = usePoolData(cacheKey);
   const { optimisticState } = useOptimisticTransactions(cacheKey);
 
-  // Members come from the DB document that the provider already fetched
   const members: Member[] = data?.db?.pool_members ?? [];
   const onchainState = data?.onchain;
+
+  const [reputations, setReputations] = useState<Record<string, ReputationScore>>({});
+
+  useEffect(() => {
+    if (members.length === 0) return;
+    const loadReputations = async () => {
+      const results = await Promise.allSettled(
+        members.map(async (m) => [m.member_address, await fetchReputation(m.member_address)] as const)
+      );
+      setReputations(
+        Object.fromEntries(
+          results
+            .filter((r): r is PromiseFulfilledResult<readonly [string, ReputationScore]> => r.status === "fulfilled")
+            .map((r) => r.value)
+        )
+      );
+    };
+    loadReputations();
+  }, [members]);
 
   const formatAddress = (address: string) =>
     `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -133,6 +153,14 @@ export function GroupMembers({
                         <XCircle className="h-4 w-4 text-destructive" />
                       )}
                     </>
+                  )}
+                </div>
+              </div>
+                  {reputations[member.member_address] && (
+                    <Badge variant="outline" className="text-xs font-normal gap-1">
+                      <Award className="h-3 w-3" />
+                      {Math.round(reputations[member.member_address].onTimeRate / 100)}% on-time
+                    </Badge>
                   )}
                 </div>
               </div>

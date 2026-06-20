@@ -10,7 +10,7 @@ import { KeyboardShortcutsHelp } from "@/components/dashboard/keyboard-shortcuts
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
 
 export default function DashboardPage() {
-  const { isConnected } = useStellar()
+  const { isConnected, isInitializing } = useStellar()
   const [activeTab, setActiveTab] = useState("groups")
   const [showHelp, setShowHelp] = useState(false)
 
@@ -21,14 +21,12 @@ export default function DashboardPage() {
     onGoToProfile: () => setActiveTab("profile"),
     onOpenHelp: () => setShowHelp(true),
   })
-
   useEffect(() => {
-    if (!isConnected) {
+    if (!isInitializing && !isConnected) {
       redirect("/")
     }
-  }, [isConnected])
-
-  if (!isConnected) {
+  }, [isInitializing, isConnected])
+  if (isInitializing || !isConnected) {
     return null
   }
 

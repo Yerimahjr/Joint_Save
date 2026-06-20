@@ -173,6 +173,10 @@ JointSave demonstrates several advanced Soroban patterns:
 ![CI/CD Pipeline](docs/ci-screenshot.png)
 *Automated testing and deployment*
 
+### Transaction Export
+![Transaction History with CSV Export](docs/transactions-screenshot.png)
+*Filter by date, pool, or activity type — then export to CSV*
+
 </div>
 
 ## Roadmap
