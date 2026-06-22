@@ -28,8 +28,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # pnpm version comes from the "packageManager" field, which lives in
+      # frontend/package.json (there is no root package.json in this repo).
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
 
       - name: Setup Node
         uses: actions/setup-node@v4
