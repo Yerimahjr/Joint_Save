@@ -5,9 +5,10 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Calendar, TrendingUp, Users, Clock, RefreshCw, AlertTriangle, Copy, Check } from "lucide-react"
+import { Calendar, TrendingUp, Users, Clock, RefreshCw, AlertTriangle, Copy, Check, CopyPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
+import Link from "next/link"
 import {
   formatTokenAmount,
   RotationalPoolState,
@@ -437,18 +438,33 @@ export function GroupDetails({ groupId, contractAddress }: GroupDetailsProps) {
             <p className="text-xs text-muted-foreground font-mono break-all min-w-0">
               Contract: {group.contract_address}
             </p>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 shrink-0"
-              onClick={handleCopy}
-              aria-label="Copy contract address"
-            >
-              {copied ? (
-                <Check className="h-3 w-3 text-green-500" />
-              ) : (
-                <Copy className="h-3 w-3" />
-              )}
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 shrink-0"
+                onClick={handleCopy}
+                aria-label="Copy contract address"
+              >
+                {copied ? (
+                  <Check className="h-3 w-3 text-green-500" />
+                ) : (
+                  <Copy className="h-3 w-3" />
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {!isPending(group.contract_address) && group.status !== "pending" && (
+          <div className="mb-4">
+            <Button variant="outline" size="sm" className="w-full gap-2" asChild>
+              <Link
+                href={`/dashboard/create/${group.type}?duplicate=1&name=${encodeURIComponent(group.name)}&description=${encodeURIComponent(group.description || "")}&amount=${group.contribution_amount || ""}&frequency=${group.frequency || ""}&members=${encodeURIComponent(JSON.stringify(group.members || []))}&token=${group.token_symbol || "XLM"}`}
+              >
+                <CopyPlus className="h-4 w-4" />
+                Start New Cycle / Duplicate Pool
+              </Link>
             </Button>
           </div>
         )}

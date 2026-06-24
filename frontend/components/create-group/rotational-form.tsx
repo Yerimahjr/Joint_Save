@@ -20,6 +20,7 @@ import {
   validateStellarAddress,
   validatePositiveAmount,
 } from "@/lib/form-validation"
+import type { DuplicatePrefill } from "@/app/dashboard/create/[type]/page"
 
 function isValidStellarAddress(addr: string) {
   return /^G[A-Z2-7]{55}$/.test(addr)
@@ -38,20 +39,25 @@ const FREQUENCY_SECONDS: Record<string, number> = {
 type FieldErrors = Partial<Record<"name" | "contributionAmount", string>>
 type Touched = Partial<Record<"name" | "contributionAmount", boolean>>
 
-export function RotationalForm() {
+export function RotationalForm({ prefill }: { prefill?: DuplicatePrefill }) {
   const router = useRouter()
   const { address } = useStellar()
   const [token, setToken] = useState<SelectedToken>({ address: "native", symbol: "XLM", decimals: 7 })
   // Creator is always the first member (read-only), others are editable
-  const [members, setMembers] = useState<string[]>([""])
-  const [memberErrors, setMemberErrors] = useState<string[]>([""])
+  const initialMembers = prefill?.members?.filter((m: string) => m !== address) ?? [""]
+  const [members, setMembers] = useState<string[]>(
+    initialMembers.length > 0 ? initialMembers : [""]
+  )
+  const [memberErrors, setMemberErrors] = useState<string[]>(
+    initialMembers.length > 0 ? initialMembers.map(() => "") : [""]
+  )
   const [error, setError] = useState("")
   const [step, setStep] = useState<"idle" | "deploying" | "initializing" | "registering" | "saving">("idle")
   const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    contributionAmount: "",
-    frequency: "weekly",
+    name: prefill?.name || "",
+    description: prefill?.description || "",
+    contributionAmount: prefill?.amount || "",
+    frequency: prefill?.frequency || "weekly",
   })
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [touched, setTouched] = useState<Touched>({})
