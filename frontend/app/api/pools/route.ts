@@ -175,6 +175,24 @@ export async function GET(req: NextRequest) {
       }
 
       return NextResponse.json({ data: data || [], total: count ?? 0, page, pageSize: PAGE_SIZE })
+    } else if (req.nextUrl.searchParams.get('explore') !== null) {
+      // Explore feed — all pools, paginated, newest first, for prospective members.
+      const PAGE_SIZE = 6
+      const page = Math.max(0, parseInt(req.nextUrl.searchParams.get('page') || '0', 10))
+      const from = page * PAGE_SIZE
+      const to = from + PAGE_SIZE - 1
+
+      const { data, error, count } = await supabase
+        .from('pools')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(from, to)
+
+      if (error) {
+        throw error
+      }
+
+      return NextResponse.json({ data: data || [], total: count ?? 0, page, pageSize: PAGE_SIZE })
     } else {
       // Fetch all pools
       const { data, error } = await supabase

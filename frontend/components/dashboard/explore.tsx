@@ -1,7 +1,6 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
   Pagination,
   PaginationContent,
@@ -9,28 +8,24 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
+import { Compass } from "lucide-react"
 import { motion } from "framer-motion"
 import { useState, useEffect, useCallback } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useStellar } from "@/components/web3-provider"
-import { EmptyState } from "@/components/dashboard/empty-state"
-import { FirstPoolTooltip } from "@/components/dashboard/first-pool-tooltip"
-import { PoolCard, PoolCardSkeleton, type Pool } from "@/components/dashboard/pool-card"
+import {
+  PoolCard,
+  PoolCardSkeleton,
+  type Pool,
+} from "@/components/dashboard/pool-card"
 
 const PAGE_SIZE = 6
-
-interface MyGroupsProps {
-  onCreateClick?: () => void
-}
 
 const container = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.1 } },
 }
 
-// ── Main MyGroups component ───────────────────────────────────────────────────
-export function MyGroups({ onCreateClick }: MyGroupsProps) {
-  const { address } = useStellar()
+export function Explore() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -39,33 +34,29 @@ export function MyGroups({ onCreateClick }: MyGroupsProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
-  const page = Math.max(0, parseInt(searchParams.get("page") || "0", 10))
+  // Use a dedicated query param so it doesn't collide with My Groups pagination.
+  const page = Math.max(0, parseInt(searchParams.get("explorePage") || "0", 10))
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
   const setPage = useCallback(
     (p: number) => {
       const params = new URLSearchParams(searchParams.toString())
-      params.set("page", String(p))
+      params.set("explorePage", String(p))
       router.push(`?${params.toString()}`, { scroll: false })
     },
     [router, searchParams]
   )
 
   useEffect(() => {
-    if (!address) {
-      setLoading(false)
-      return
-    }
     loadPools(page)
-  }, [address, page])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page])
 
   const loadPools = async (currentPage: number) => {
     try {
       setLoading(true)
       setError("")
-      const res = await fetch(
-        `/api/pools?creator=${address?.toLowerCase()}&page=${currentPage}`
-      )
+      const res = await fetch(`/api/pools?explore=true&page=${currentPage}`)
       if (!res.ok) throw new Error("Failed to fetch pools")
       const json = await res.json()
       const data: Pool[] = Array.isArray(json) ? json : (json.data ?? [])
@@ -83,12 +74,14 @@ export function MyGroups({ onCreateClick }: MyGroupsProps) {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold">My Groups</h2>
-          <Skeleton className="h-4 w-40 mt-2" />
+          <h2 className="text-3xl font-bold">Explore Pools</h2>
+          <p className="text-muted-foreground mt-1">
+            Browse savings circles and see how reliably their members participate
+          </p>
         </div>
         <div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          aria-label="Loading groups"
+          aria-label="Loading pools"
         >
           {Array.from({ length: PAGE_SIZE }).map((_, i) => (
             <PoolCardSkeleton key={i} />
@@ -102,7 +95,7 @@ export function MyGroups({ onCreateClick }: MyGroupsProps) {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold">My Groups</h2>
+          <h2 className="text-3xl font-bold">Explore Pools</h2>
         </div>
         <Card className="p-6 bg-destructive/10 text-destructive">
           <p>{error}</p>
@@ -117,24 +110,28 @@ export function MyGroups({ onCreateClick }: MyGroupsProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex items-center justify-between"
       >
-        <div>
-          <h2 className="text-3xl font-bold">My Groups</h2>
-          <p className="text-muted-foreground mt-1">
-            {total === 0
-              ? "Manage your savings circles"
-              : `${total} active group${total !== 1 ? "s" : ""}`}
-          </p>
-        </div>
+        <h2 className="text-3xl font-bold">Explore Pools</h2>
+        <p className="text-muted-foreground mt-1">
+          {total === 0
+            ? "No pools to explore yet"
+            : `Browse ${total} pool${total !== 1 ? "s" : ""} — the health badge shows how reliably members have been depositing`}
+        </p>
       </motion.div>
 
       {pools.length === 0 ? (
-        <EmptyState onCreateClick={onCreateClick} />
+        <Card className="p-12 flex flex-col items-center text-center gap-3">
+          <div className="rounded-full bg-muted p-3">
+            <Compass className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <p className="font-medium">Nothing to explore just yet</p>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            Once people start creating savings pools, they&apos;ll show up here
+            for you to browse.
+          </p>
+        </Card>
       ) : (
         <>
-          <FirstPoolTooltip poolCount={pools.length} />
-
           <motion.div
             variants={container}
             initial="hidden"
