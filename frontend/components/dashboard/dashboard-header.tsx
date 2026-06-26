@@ -133,6 +133,14 @@ export function DashboardHeader() {
                       </DropdownMenuItem>
                     ))
                   )}
+                  {!initialLoading && notifications.length > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild className="justify-center text-sm font-medium text-primary cursor-pointer">
+                        <Link href="/dashboard/notifications">View all notifications</Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
