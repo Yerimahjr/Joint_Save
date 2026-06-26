@@ -170,6 +170,23 @@ export function MyGroups({ onCreateClick }: MyGroupsProps) {
 
       {pools.length === 0 ? (
         <EmptyState onCreateClick={onCreateClick} />
+      ) : filteredPools.length === 0 ? (
+        <Card className="p-12 flex flex-col items-center text-center gap-3">
+          <div className="rounded-full bg-muted p-3">
+            <Search className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <p className="font-medium">No pools match your search</p>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            Try adjusting your search term or{" "}
+            <button
+              onClick={() => setSearchTerm("")}
+              className="text-primary hover:underline"
+            >
+              clear the search
+            </button>
+            .
+          </p>
+        </Card>
       ) : (
         <>
           <FirstPoolTooltip poolCount={pools.length} />
